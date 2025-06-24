@@ -1,11 +1,15 @@
 package com.koreait.SpringSecurityStudy.config;
 
+import com.koreait.SpringSecurityStudy.security.filter.JwtAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -13,6 +17,16 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class SecurityConfig {
 
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    // 비밀번호 암호화(해싱)하고 검증하는 역할
+    // 단방향 해시, 복호화 불가능
+    @Bean   // IoC 컨테이너에 객체 저장 -> 다른 곳에서 @Autowired로 쓸 수 있음
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+    
     // corsConfigurationSource() 설정은 spring security에서
     // CORS(Cross-Origin Resource Sharing)를 처리하기 위한 설정
     // CORS
@@ -52,13 +66,18 @@ public class SecurityConfig {
         http.httpBasic(httpBasic -> httpBasic.disable());
         // 서버사이드렌더링(SSR) 로그아웃 비활성화
         http.logout(logout -> logout.disable());
-        http.sessionManagement(Session -> Session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // 세션 사용 ㄴㄴ
+        http.sessionManagement(Session -> Session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // 세션 사용 ㄴㄴ, 무상태
+
+        // formLogin 비활성화 해서 사실 username어쩌구filter는 동작할 일이 없는데, 커스텀한 필터의 위치를 잡기 위해 매개변수로 사용함!
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);  // 두 번째 매개변수 필터 가기 전에 만든 필터 끼운 것
+
 
         // 특정 요청 URL에 대한 권한 설정
         http.authorizeHttpRequests(auth -> {
             // requestMatchers()로 명시한 URL만 예외적으로 허용되거나 다른 권한을 부여할 수 있어.
             // 그 외의 모든 요청은 anyRequest()로 매핑돼서 기본 정책을 따름.
-//            auth.requestMatchers("").permitAll();
+            // 로그인 페이지로부터 들어오는 요청같은 경우 인증거치지 않아도 됨..!
+            auth.requestMatchers("/auth/test", "/auth/signup").permitAll();
             auth.anyRequest().authenticated(); // -> 로그인한(authenticated -> 인증된) 사용자만
         });
 
