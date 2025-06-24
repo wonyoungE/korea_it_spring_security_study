@@ -52,25 +52,33 @@ public class SecurityConfig {
     }
 
     @Bean
+    // JWT 기반 인증 시스템을 쓰기 위해 필요한 기본 설정
+    // Spring Security는 폼 로그인 + 세션 기반 인증(일반 로그인)이 default이기 때문에..
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(Customizer.withDefaults()); // 위에서 만든 cors 설정을 security에 적용
         http.csrf(csrf -> csrf.disable());
         // CSRF란
         // 사용자가 의도하지 않은 요청을 공격자가 유도해서 서버에 전달하도록 하는 공격
+        // 주로 쿠키 기반 인증일 때 문제가 됨. JWT 쓰는 경우 비활성화하는 것이 일반적
         // JWT 방식 또는 무상태(Stateless) 인증이기 때문에
         // 세션이 없고, 쿠키도 안 쓰고, 토큰 기반이기 때문에 CSRF 공격 자체가 성립되지 않는다.
 
+        // 기본 폼 로그인 막음
         // 서버사이드렌더링(SSR) 로그인 방식 비활성화
         http.formLogin(formLogin -> formLogin.disable());
         // HTTP 프로토콜 기본 로그인 방식 비활성화
         http.httpBasic(httpBasic -> httpBasic.disable());
         // 서버사이드렌더링(SSR) 로그아웃 비활성화
         http.logout(logout -> logout.disable());
+        // 세션을 아예 사용 안함
+        // JWT는 로그인 정보를 서버 세션에 저장 X(== "무상태 STATELESS"), 모든 요청은 토큰이 있어야 통과
         http.sessionManagement(Session -> Session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // 세션 사용 ㄴㄴ, 무상태
 
-        // formLogin 비활성화 해서 사실 username어쩌구filter는 동작할 일이 없는데, 커스텀한 필터의 위치를 잡기 위해 매개변수로 사용함!
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);  // 두 번째 매개변수 필터 가기 전에 만든 필터 끼운 것
-
+        // formLogin 비활성화해서 사실 username어쩌구filter는 동작할 일이 없는데, 커스텀한 필터의 위치를 잡기 위해 매개변수로 사용함!
+        // 직접 만든 JWT 필터를 보안 필터 체인에 끼워넣음
+        // UsernamePasswordAuthenticationFilter 앞에 넣어서 먼저 토큰 확인하게 함
+        // 실제 로그인은 username/password(일반 폼 로그인)로 하지 않으니까 usernamePasswordAuthenticationFilter는 필요없음
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         // 특정 요청 URL에 대한 권한 설정
         http.authorizeHttpRequests(auth -> {

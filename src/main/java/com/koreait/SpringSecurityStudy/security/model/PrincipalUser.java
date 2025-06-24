@@ -10,7 +10,7 @@ import java.util.List;
 
 @Data
 @Builder
-// UserDetails가 User 자체..
+// User가 UserDetails(interface)를 구현함 => User가 UserDetails 자체
 public class PrincipalUser implements UserDetails {
     private Integer userId;
     private String username;
