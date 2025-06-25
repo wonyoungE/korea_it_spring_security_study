@@ -14,6 +14,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+// @Configuration -> 스프링 부트가 애플리케이션을 시작할 때 로딩하는 설정 파일
 @Configuration
 public class SecurityConfig {
 
@@ -85,7 +86,7 @@ public class SecurityConfig {
             // requestMatchers()로 명시한 URL만 예외적으로 허용되거나 다른 권한을 부여할 수 있어.
             // 그 외의 모든 요청은 anyRequest()로 매핑돼서 기본 정책을 따름.
             // 로그인 페이지로부터 들어오는 요청같은 경우 인증거치지 않아도 됨..!
-            auth.requestMatchers("/auth/test", "/auth/signup").permitAll();
+            auth.requestMatchers("/auth/test", "/auth/signup", "/auth/signin").permitAll();
             auth.anyRequest().authenticated(); // -> 로그인한(authenticated -> 인증된) 사용자만
         });
 
