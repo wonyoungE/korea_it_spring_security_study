@@ -83,10 +83,14 @@ public class SecurityConfig {
 
         // 특정 요청 URL에 대한 권한 설정
         http.authorizeHttpRequests(auth -> {
+            // 권한을 ROLE_ADMIN, ROLE_USER 처럼 저장했다면 -> hasRole("ADMIN") 가능
+            // 권한을 그냥 ADMIN, USER 이렇게 저장했다면 -> hasAuthority("ADMIN") 사용
+            // "/auth/test"로 요청하기 위해서는 권한이 ADMIN이어야함
+            auth.requestMatchers("/auth/test").hasRole("ADMIN");
             // requestMatchers()로 명시한 URL만 예외적으로 허용되거나 다른 권한을 부여할 수 있어.
             // 그 외의 모든 요청은 anyRequest()로 매핑돼서 기본 정책을 따름.
             // 로그인 페이지로부터 들어오는 요청같은 경우 인증거치지 않아도 됨..!
-            auth.requestMatchers("/auth/test", "/auth/signup", "/auth/signin").permitAll();
+            auth.requestMatchers( "/auth/signup", "/auth/signin").permitAll();
             auth.anyRequest().authenticated(); // -> 로그인한(authenticated -> 인증된) 사용자만
         });
 

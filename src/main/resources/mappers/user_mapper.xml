@@ -80,4 +80,20 @@
         WHERE
             ut.username = #{username};
     </select>
+    <update id="updateEmail">
+        UPDATE
+            user_tb
+        SET
+            email = #{email}
+        WHERE
+            user_id = #{userId}
+    </update>
+    <update id="updatePassword">
+        UPDATE
+            user_tb
+        SET
+            password = #{password}
+        WHERE
+            user_id = #{userId}
+    </update>
 </mapper>

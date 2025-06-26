@@ -1,13 +1,12 @@
 package com.koreait.SpringSecurityStudy.service;
 
-import com.koreait.SpringSecurityStudy.dto.ApiRespDto;
-import com.koreait.SpringSecurityStudy.dto.SigninReqDto;
-import com.koreait.SpringSecurityStudy.dto.SignupReqDto;
+import com.koreait.SpringSecurityStudy.dto.*;
 import com.koreait.SpringSecurityStudy.entity.User;
 import com.koreait.SpringSecurityStudy.entity.UserRole;
 import com.koreait.SpringSecurityStudy.repository.UserRepository;
 import com.koreait.SpringSecurityStudy.repository.UserRoleRepository;
 import com.koreait.SpringSecurityStudy.security.jwt.JwtUtil;
+import com.koreait.SpringSecurityStudy.security.model.PrincipalUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -59,5 +58,26 @@ public class AuthService {
         // 로그인 성공시 토큰 생성
         String token = jwtUtil.generateAccessToken(user.getUserId().toString());
         return new ApiRespDto<>("success", "로그인 성공", token);
+    }
+
+    public ApiRespDto<?> modifyEmail(Integer userId, ModifyEmailReqDto modifyEmailReqDto) {
+        User user = modifyEmailReqDto.toEntity(userId);
+        int result = userRepository.updateEmail(user);
+        return new ApiRespDto<>("success", "이메일 수정 성공", result);
+    }
+
+    public ApiRespDto<?> modifyPassword(ModifyPasswordReqDto modifyPasswordReqDto, PrincipalUser principalUser) {
+        // PrincipalUser는 왜 들고옴? ContextHolder에 등록된 user 정보의 password와 사용자로부터 입력받은 현재 비밀번호랑 같은지 비교 위함
+        if(!bCryptPasswordEncoder.matches(modifyPasswordReqDto.getOldPassword(), principalUser.getPassword())) {
+            return new ApiRespDto<>("failed", "사용자 정보를 확인해주세요.", null);
+        }
+        if(!modifyPasswordReqDto.getNewPassword().equals(modifyPasswordReqDto.getNewPasswordCheck())) {
+            return new ApiRespDto<>("failed", "새 비밀번호가 일치하지 않습니다.", null);
+        }
+
+        String password = bCryptPasswordEncoder.encode(modifyPasswordReqDto.getNewPassword());
+        int result = userRepository.updatePassword(principalUser.getUserId(), password);
+
+        return new ApiRespDto<>("success", "비밀번호 수정 성공", result);
     }
 }

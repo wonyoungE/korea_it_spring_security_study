@@ -19,7 +19,8 @@ import java.util.List;
 import java.util.Optional;
 
 // filter 직접 커스텀해서 사용할 것
-@Component  // Autowired로 쓸 거기 때문에 bean 등록해둬야 함.
+// Autowired로 쓸 거기 때문에 bean 등록해둬야 함.
+@Component
 public class JwtAuthenticationFilter implements Filter {
     @Autowired
     private JwtUtil jwtUtil;
