@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserRole {
+public class UserRole { // User와 Role 매핑 테이블
     private Integer userRoleId;
     private Integer userId;
     private Integer roleId;

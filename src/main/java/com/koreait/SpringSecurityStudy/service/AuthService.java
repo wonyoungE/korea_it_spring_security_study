@@ -28,6 +28,7 @@ public class AuthService {
     @Autowired
     private JwtUtil jwtUtil;
 
+    // 회원가입
     public ApiRespDto<?> addUser(SignupReqDto signupReqDto) {
         // 비밀번호 암호화 위해서 bCryptPasswordEncoder 넣어줌
         Optional<User> optionalUser = userRepository.addUser(signupReqDto.toEntity(bCryptPasswordEncoder));
@@ -55,7 +56,7 @@ public class AuthService {
         }
 
         System.out.println("로그인 성공!");
-        // 토큰 생성
+        // 로그인 성공시 토큰 생성
         String token = jwtUtil.generateAccessToken(user.getUserId().toString());
         return new ApiRespDto<>("success", "로그인 성공", token);
     }

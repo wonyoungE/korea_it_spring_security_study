@@ -30,7 +30,8 @@ public class JwtAuthenticationFilter implements Filter {
     @Override
     // 이 메서드에서 AuthenticationManager, AuthenticationProvider, UserDetailsService, UserDetails 전부 구현
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        HttpServletRequest request = (HttpServletRequest) servletRequest;   // 요청에 JWT 토큰 들어있음?, Header의 Authorization에 토큰 있음
+        // 요청에 JWT 토큰 들어있음?, Header의 Authorization에 토큰 있음
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
         // 요청 방식 리스트
         // list에 있는 요청 방식이 아니면 이 필터는 아무것도 하지 않고 다음 필터나 컨트롤러에게 넘김
         // 실제 API 요청이 아닌 요청은 이 필터에서 인증 검사 안 하고 통과시킴.
@@ -69,7 +70,7 @@ public class JwtAuthenticationFilter implements Filter {
                             .build();
                     // UsernamePasswordAuthenticationToken 직접 생성
                     // 두 번째 매개변수는 패스워드인데, 우리는 이미 인증이 완료된 상태라서 비워둠
-                    // 로그인을 토큰을 발급받음, 클라이언트는 이 필터를 계속 타면서 토큰 파싱을 계속할 것임 -> user가 db에 있으면 set해두는 것
+                    // 로그인 토큰을 발급받음, 클라이언트는 이 필터를 계속 타면서 토큰 파싱을 계속할 것임 -> user가 db에 있으면 set해두는 것
                     // getClaims하면서 확인을 한 것
                     // 토큰이 있다는 것 자체가 인증이 완료되었다는 것
                     Authentication authentication = new UsernamePasswordAuthenticationToken(principalUser, "", principalUser.getAuthorities());

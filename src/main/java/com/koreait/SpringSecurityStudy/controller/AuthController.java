@@ -16,6 +16,9 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
+    // /auth/test, /auth/signup, /auth/signin으로 들어오는 요청은
+    // 인증없어도 요청 가능 -> requestMatchers
+
     @GetMapping("/test")
     public ResponseEntity<?> test() {
         return ResponseEntity.ok("test");
@@ -32,6 +35,9 @@ public class AuthController {
     }
 
     // 토큰이 없으면 애초에 여기에 도달 X
+    // 왜냐? Config에서 requestMatchers에 없는 경로는
+    // AuthenticationFilter가 요청 가로채서 인증하기 때문에
+    // 인증 완료해야 Controller에 도달함
     @GetMapping("/principal")
     public ResponseEntity<?> getPrincipal() {
         return ResponseEntity.ok(SecurityContextHolder.getContext().getAuthentication());

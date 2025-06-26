@@ -3,27 +3,81 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.koreait.SpringSecurityStudy.mapper.UserMapper">
+    <resultMap id="RoleResultMap" type="com.koreait.SpringSecurityStudy.entity.Role">
+        <!-- property: entity에서 쓰는 멤버 변수 이름, column: db 컬럼에서 쓰는 이름 -->
+        <id property="roleId" column="role_id"/>
+        <result property="roleName" column="role_name"/>
+        <result property="roleNameKor" column="role_name_kor"/>
+    </resultMap>
+    <resultMap id="UserRoleResultMap" type="com.koreait.SpringSecurityStudy.entity.UserRole">
+        <id property="userRoleId" column="user_role_id"/>
+        <result property="userId" column="urt_user_id"/>
+        <result property="roleId" column="urt_role_id"/>
+        <result property="createDt" column="create_dt"/>
+        <result property="updateDt" column="update_dt"/>
+        <!-- 1:N 관계 -> association -->
+        <association property="role" resultMap="RoleResultMap"/>
+    </resultMap>
+    <resultMap id="UserResultMap" type="com.koreait.SpringSecurityStudy.entity.User">
+        <id property="userId" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="email" column="email"/>
+        <!-- N:M 관계 -> collection -->
+        <collection property="userRoles" resultMap="UserRoleResultMap"/>
+    </resultMap>
+
     <insert id="addUser" useGeneratedKeys="true" keyProperty="userId">
-        <!-- 생성된 ID를 바로 받을 수 있음 -->
+        <!-- AI로 생성된 ID를 set해서 user 객체를 반환해줌 -->
         INSERT INTO
             user_tb
         VALUES
             (0, #{username}, #{password}, #{email});
     </insert>
-    <select id="getUserByUserId">
+    <select id="getUserByUserId" resultMap="UserResultMap">
         SELECT
-            *
+            ut.user_id,
+            ut.username,
+            ut.password,
+            ut.email,
+
+            urt.user_role_id,
+            urt.user_id AS urt_user_id,
+            urt.role_id AS urt_role_id,
+            urt.create_dt,
+            urt.update_dt,
+
+            rt.role_id,
+            rt.role_name,
+            rt.role_name_kor
         FROM
-            user_tb
+            user_tb ut
+            LEFT JOIN user_role_tb urt ON (ut.user_id = urt.user_id)
+            LEFT JOIN role_tb rt ON (rt.role_id = urt.role_id)
         WHERE
-            user_id = #{userId};
+            ut.user_id = #{userId};
     </select>
-    <select id="getUserByUsername">
+    <select id="getUserByUsername" resultMap="UserResultMap">
         SELECT
-            *
+            ut.user_id,
+            ut.username,
+            ut.password,
+            ut.email,
+
+            urt.user_role_id,
+            urt.user_id AS urt_user_id,
+            urt.role_id AS urt_role_id,
+            urt.create_dt,
+            urt.update_dt,
+
+            rt.role_id,
+            rt.role_name,
+            rt.role_name_kor
         FROM
-            user_tb
+            user_tb ut
+            LEFT JOIN user_role_tb urt ON (ut.user_id = urt.user_id)
+            LEFT JOIN role_tb rt ON (rt.role_id = urt.role_id)
         WHERE
-            username = #{username};
+            ut.username = #{username};
     </select>
 </mapper>

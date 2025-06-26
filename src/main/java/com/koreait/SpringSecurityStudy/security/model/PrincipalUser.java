@@ -28,6 +28,9 @@ public class PrincipalUser implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // map -> list 안에 들어있는 요소 하나하나에 적용시키는 것
         // filter -> 조건으로 걸러내는 것
+        // userRole -> user와 role 매핑 테이블, PrincipalUser는 유저의 모든 권한을 가져온다.(List<UserRole>)
+        // userRoles List의 userRole 객체 하나하나에서 role name을 가져와 List<SimpleGrantedAuthortiy>로 변환
+        // SimpleGrantedAuthority => spring security에서 권한을 표현하는 객체
         return userRoles.stream().map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getRoleName()))
                 .collect(Collectors.toList());
     }
