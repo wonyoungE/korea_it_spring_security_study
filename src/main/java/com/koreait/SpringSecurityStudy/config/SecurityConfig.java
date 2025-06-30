@@ -1,6 +1,8 @@
 package com.koreait.SpringSecurityStudy.config;
 
 import com.koreait.SpringSecurityStudy.security.filter.JwtAuthenticationFilter;
+import com.koreait.SpringSecurityStudy.security.handler.OAuth2SuccessHandler;
+import com.koreait.SpringSecurityStudy.service.OAuth2PrincipalUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +22,12 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Autowired
+    private OAuth2PrincipalUserService oAuth2PrincipalUserService;
+
+    @Autowired
+    private OAuth2SuccessHandler oAuth2SuccessHandler;
 
     // 비밀번호 암호화(해싱)하고 검증하는 역할
     // 단방향 해시, 복호화 불가능
@@ -90,9 +98,22 @@ public class SecurityConfig {
             // requestMatchers()로 명시한 URL만 예외적으로 허용되거나 다른 권한을 부여할 수 있어.
             // 그 외의 모든 요청은 anyRequest()로 매핑돼서 기본 정책을 따름.
             // 로그인 페이지로부터 들어오는 요청같은 경우 인증거치지 않아도 됨..!
-            auth.requestMatchers( "/auth/signup", "/auth/signin").permitAll();
+            auth.requestMatchers( "/auth/signup", "/auth/signin",
+                    // oauth 로그인 요청
+                    "/oauth2/**", "/login/oauth2/**").permitAll();
             auth.anyRequest().authenticated(); // -> 로그인한(authenticated -> 인증된) 사용자만
         });
+
+        // 요청이 들어오면 Spring Security의 filterChain을 탐
+        // 여기서 여러 필터 중 하나가 OAuth2 요청을 감지
+        // 감지되면 해당 Provider의 로그인 페이지로 리디렉션
+        http.oauth2Login(oauth2 ->
+                // userInfoEndpoint -> OAuth2 로그인 요청이 성공하고 사용자 정보를 가져오는 과정 설정
+                oauth2.userInfoEndpoint(userInfo ->
+                        // 사용자 정보 요청이 완료가 되면 이 커스텀 서비스로 OAuth2User를 처리하겠다고 설정
+                        userInfo.userService(oAuth2PrincipalUserService))
+                        // OAuth2 인증이 최종적으로 성공한 후(사용자 정보 파싱이 끝난 후) 실행할 핸들러 설정
+                        .successHandler(oAuth2SuccessHandler));
 
         return http.build();
     }

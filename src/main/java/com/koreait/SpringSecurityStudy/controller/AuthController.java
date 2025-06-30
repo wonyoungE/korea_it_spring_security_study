@@ -58,6 +58,7 @@ public class AuthController {
     public ResponseEntity<?> modifyPassword(
             @PathVariable Integer userId,
             @RequestBody ModifyPasswordReqDto modifyPasswordReqDto,
+            // SecurityContextHolder-SecurityContext-Authentication 안의 등록된 인증 객체 가져오기
             @AuthenticationPrincipal PrincipalUser principalUser) {
         if(!userId.equals(principalUser.getUserId())) {
             return ResponseEntity.badRequest().body("본인의 계정만 변경이 가능합니다.");
