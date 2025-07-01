@@ -34,6 +34,17 @@ public class JwtUtil {
                     .compact(); // 설정한 JWT 내용을 바탕으로 최종적으로 문자열 형태의 JWT 생성
     }
 
+    // 메일 인증에 사용할 토큰 생성
+    public String generateMailVerifyToken(String id) {
+        return Jwts.builder()
+                .subject("VerifyToken")
+                .id(id)
+                // 3분
+                .expiration(new Date(new Date().getTime() + (1000L * 60L * 3L)))
+                .signWith(KEY)
+                .compact();
+    }
+
     // 토큰이 맞는지 확인하는 메서드
     public boolean isBearer(String token) {
         if(token == null) {
