@@ -7,10 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @Controller     // => JSP
 @RequestMapping("/mail")
@@ -19,8 +19,15 @@ public class MailController {
     private MailService mailService;
 
     @PostMapping("/send")
-    private ResponseEntity<?> sendMail(@RequestBody SendMailReqDto sendMailReqDto,
+    public ResponseEntity<?> sendMail(@RequestBody SendMailReqDto sendMailReqDto,
                                        @AuthenticationPrincipal PrincipalUser principalUser) {
         return ResponseEntity.ok(mailService.sendMail(sendMailReqDto, principalUser));
+    }
+
+    @GetMapping("/verify")
+    public String verify(@RequestParam String verifyToken, Model model) {
+        Map<String, Object> resultMap = mailService.verify(verifyToken);
+        model.addAllAttributes(resultMap);
+        return "result_page";
     }
 }

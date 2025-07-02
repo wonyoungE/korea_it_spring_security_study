@@ -100,7 +100,7 @@ public class SecurityConfig {
             // 로그인 페이지로부터 들어오는 요청같은 경우 인증거치지 않아도 됨..!
             auth.requestMatchers( "/auth/signup", "/auth/signin",
                     // oauth 로그인 요청
-                    "/oauth2/**", "/login/oauth2/**").permitAll();
+                    "/oauth2/**", "/login/oauth2/**", "/mail/verify").permitAll();
             auth.anyRequest().authenticated(); // -> 로그인한(authenticated -> 인증된) 사용자만
         });
 

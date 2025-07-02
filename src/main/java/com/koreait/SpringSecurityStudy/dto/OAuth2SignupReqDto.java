@@ -26,7 +26,7 @@ public class OAuth2SignupReqDto {
     public OAuth2User toOAuth2User(int userId) {
         return OAuth2User.builder()
                 .userId(userId)
-                .provider((this.provider))
+                .provider(this.provider)
                 .providerUserId(this.providerUserId)
                 .build();
     }

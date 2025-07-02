@@ -3,20 +3,30 @@ package com.koreait.SpringSecurityStudy.service;
 import com.koreait.SpringSecurityStudy.dto.ApiRespDto;
 import com.koreait.SpringSecurityStudy.dto.SendMailReqDto;
 import com.koreait.SpringSecurityStudy.entity.User;
+import com.koreait.SpringSecurityStudy.entity.UserRole;
 import com.koreait.SpringSecurityStudy.repository.UserRepository;
+import com.koreait.SpringSecurityStudy.repository.UserRoleRepository;
 import com.koreait.SpringSecurityStudy.security.jwt.JwtUtil;
 import com.koreait.SpringSecurityStudy.security.model.PrincipalUser;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import org.apache.ibatis.mapping.ResultMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Service
 public class MailService {
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserRoleRepository userRoleRepository;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -55,5 +65,47 @@ public class MailService {
         javaMailSender.send(message);
 
         return new ApiRespDto<>("success", "인증 메일이 전송되었습니다. 메일함을 확인해주세요.", null);
+    }
+
+    // 위에서 준 url -> /mail/verify? 어쩌구 검증하는 메서드
+    public Map<String, Object> verify(String token) {
+        Claims claims = null;
+        Map<String, Object> resultMap = null;
+
+        try {
+            // claim -> 페이로드, 사용자 정보
+            claims = jwtUtil.getClaims(token);
+            // 검증용 토큰인지 확인
+            if(!claims.getSubject().equals("VerifyToken")) {
+                resultMap = Map.of("status", "failed",
+                        "message", "잘못된 접근입니다.");
+            }
+
+            Integer userId = Integer.parseInt(claims.getId());
+            Optional<User> optionalUser = userRepository.getUserByUserId(userId);
+            if(optionalUser.isEmpty()) {
+                resultMap = Map.of("status", "failed",
+                        "message", "존재하지 않는 사용자입니다.");
+            }
+
+            Optional<UserRole> optionalUserRole = userRoleRepository.getUserRoleByUserIdAndRoleId(userId, 3);
+            System.out.println("userId: " + optionalUserRole.get().getUserId() + " roleId: " + optionalUserRole.get().getRoleId());
+            if(optionalUserRole.isEmpty()) {
+                resultMap = Map.of("status", "failed",
+                        "message", "이미 인증이 완료된 이메일입니다.");
+            } else {
+                int result = userRoleRepository.updateRoleId(userId, optionalUserRole.get().getUserRoleId());
+                resultMap = Map.of("status", "success",
+                        "message", "이메일 인증이 완료되었습니다.");
+            }
+        } catch (ExpiredJwtException e) {
+            resultMap = Map.of("status", "failed",
+                            "message", "만료된 인증 요청입니다.\n인증 메일을 다시 요청해주세요.");
+        } catch (JwtException e) {
+            resultMap = Map.of("status", "failed",
+                    "message", "잘못된 접근입니다.\n인증 메일을 다시 요청해주세요.");
+        }
+
+        return resultMap;
     }
 }
